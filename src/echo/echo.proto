@@ -1,0 +1,36 @@
+syntax = "proto3";
+package echo;
+
+option go_package = "echo"; 
+
+
+import "google/api/annotations.proto";
+import "google/longrunning/operations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+
+
+service EchoServer {
+
+  option (google.api.default_host) = "grpc.domain.com:50051";
+
+  rpc SayHello (EchoRequest) returns (EchoReply) {
+    option (google.api.http).get = "/v1/sayhello/{name}";
+  }
+
+  rpc SayHelloLRO (EchoRequest) returns  (google.longrunning.Operation) {
+    option (google.api.http).get = "/v1/sayhellolro/{name}";
+    option (google.longrunning.operation_info) = {
+      response_type: "EchoReply"
+    };
+  }
+}
+
+
+message EchoRequest {
+  string name = 1;
+}
+
+message EchoReply {
+  string message = 1;
+}
