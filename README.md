@@ -56,11 +56,11 @@ go get golang.org/x/net/context \
         google.golang.org/grpc/health \
         google.golang.org/grpc/health/grpc_health_v1 \
         google.golang.org/grpc/metadata \
-	google.golang.org/api/option \
-	google.golang.org/api/transport \        
+        google.golang.org/api/option \
+        google.golang.org/api/transport \
         github.com/google/uuid \
-	github.com/googleapis/gax-go/v2 \
-        github.com/golang/protobuf/protoc-gen-go \   
+        github.com/googleapis/gax-go/v2 \
+        github.com/golang/protobuf/protoc-gen-go \
         github.com/googleapis/gapic-generator-go/cmd/protoc-gen-go_gapic
 ```
 

@@ -1,0 +1,38 @@
+syntax = "proto3";
+package helloworld;
+
+import "google/api/annotations.proto";
+import "google/longrunning/operations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+
+
+service Greeter {
+
+  option (google.api.default_host) = "grpc.domain.com:50051";
+  
+  rpc SayHelloLRO (HelloRequest) returns  (google.longrunning.Operation) {
+    option (google.api.http).get = "/v1/{name}";
+    option (google.longrunning.operation_info) = {
+      response_type: "HelloReply"
+      metadata_type: "HelloReplyMetaData"
+    };
+  }
+
+  rpc SayHello (HelloRequest) returns  (HelloReply) {
+    option (google.api.http).get = "/v1/{name}";
+  }    
+}
+
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}
+
+message HelloReplyMetaData {
+  int32 progress = 1;
+}
