@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,19 +19,24 @@ package echoclient
 import (
 	"context"
 	echopb "echo"
+	"fmt"
 	"math"
+	"net/url"
 	"time"
 
 	"cloud.google.com/go/longrunning"
 	lroauto "cloud.google.com/go/longrunning/autogen"
 	gax "github.com/googleapis/gax-go/v2"
 	"google.golang.org/api/option"
-	"google.golang.org/api/transport"
+	"google.golang.org/api/option/internaloption"
+	gtransport "google.golang.org/api/transport/grpc"
 	longrunningpb "google.golang.org/genproto/googleapis/longrunning"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 )
+
+var newEchoServerClientHook clientHook
 
 // EchoServerCallOptions contains the retry settings for each method of EchoServerClient.
 type EchoServerCallOptions struct {
@@ -41,9 +46,11 @@ type EchoServerCallOptions struct {
 
 func defaultEchoServerClientOptions() []option.ClientOption {
 	return []option.ClientOption{
-		option.WithEndpoint("grpc.domain.com:50051"),
+		internaloption.WithDefaultEndpoint("grpc.domain.com:50051"),
+		internaloption.WithDefaultMTLSEndpoint("grpc.domain.com:50051"),
+		internaloption.WithDefaultAudience("https://grpc.domain.com/"),
+		internaloption.WithDefaultScopes(DefaultAuthScopes()...),
 		option.WithGRPCDialOption(grpc.WithDisableServiceConfig()),
-		option.WithScopes(DefaultAuthScopes()...),
 		option.WithGRPCDialOption(grpc.WithDefaultCallOptions(
 		grpc.MaxCallRecvMsgSize(math.MaxInt32))),
 	}
@@ -82,8 +89,11 @@ func defaultEchoServerCallOptions() *EchoServerCallOptions {
 //
 // Methods, except Close, may be called concurrently. However, fields must not be modified concurrently with method calls.
 type EchoServerClient struct {
-	// The connection to the service.
-	conn *grpc.ClientConn
+	// Connection pool of gRPC connections to the service.
+	connPool gtransport.ConnPool
+
+	// flag to opt out of default deadlines via GOOGLE_API_GO_EXPERIMENTAL_DISABLE_DEFAULT_DEADLINE
+	disableDeadlines bool
 
 	// The gRPC API client.
 	echoServerClient echopb.EchoServerClient
@@ -103,40 +113,58 @@ type EchoServerClient struct {
 // NewEchoServerClient creates a new echo server client.
 //
 func NewEchoServerClient(ctx context.Context, opts ...option.ClientOption) (*EchoServerClient, error) {
-	conn, err := transport.DialGRPC(ctx, append(defaultEchoServerClientOptions(), opts...)...)
+	clientOpts := defaultEchoServerClientOptions()
+
+	if newEchoServerClientHook != nil {
+		hookOpts, err := newEchoServerClientHook(ctx, clientHookParams{})
+		if err != nil {
+			return nil, err
+		}
+		clientOpts = append(clientOpts, hookOpts...)
+	}
+
+	disableDeadlines, err := checkDisableDeadlines()
+	if err != nil {
+		return nil, err
+	}
+
+	connPool, err := gtransport.DialPool(ctx, append(clientOpts, opts...)...)
 	if err != nil {
 		return nil, err
 	}
 	c := &EchoServerClient{
-		conn:        conn,
+		connPool:    connPool,
+		disableDeadlines: disableDeadlines,
 		CallOptions: defaultEchoServerCallOptions(),
 
-		echoServerClient: echopb.NewEchoServerClient(conn),
+		echoServerClient: echopb.NewEchoServerClient(connPool),
 	}
 	c.setGoogleClientInfo()
 
-	c.LROClient, err = lroauto.NewOperationsClient(ctx, option.WithGRPCConn(conn))
+	c.LROClient, err = lroauto.NewOperationsClient(ctx, gtransport.WithConnPool(connPool))
 	if err != nil {
-		// This error "should not happen", since we are just reusing old connection
+		// This error "should not happen", since we are just reusing old connection pool
 		// and never actually need to dial.
-		// If this does happen, we could leak conn. However, we cannot close conn:
-		// If the user invoked the function with option.WithGRPCConn,
+		// If this does happen, we could leak connp. However, we cannot close conn:
+		// If the user invoked the constructor with option.WithGRPCConn,
 		// we would close a connection that's still in use.
-		// TODO(pongad): investigate error conditions.
+		// TODO: investigate error conditions.
 		return nil, err
 	}
 	return c, nil
 }
 
-// Connection returns the client's connection to the API service.
+// Connection returns a connection to the API service.
+//
+// Deprecated.
 func (c *EchoServerClient) Connection() *grpc.ClientConn {
-	return c.conn
+	return c.connPool.Conn()
 }
 
 // Close closes the connection to the API service. The user should invoke this when
 // the client is no longer required.
 func (c *EchoServerClient) Close() error {
-	return c.conn.Close()
+	return c.connPool.Close()
 }
 
 // setGoogleClientInfo sets the name and version of the application in
@@ -149,7 +177,13 @@ func (c *EchoServerClient) setGoogleClientInfo(keyval ...string) {
 }
 
 func (c *EchoServerClient) SayHello(ctx context.Context, req *echopb.EchoRequest, opts ...gax.CallOption) (*echopb.EchoReply, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	if _, ok := ctx.Deadline(); !ok && !c.disableDeadlines {
+		cctx, cancel := context.WithTimeout(ctx, 600000 * time.Millisecond)
+		defer cancel()
+		ctx = cctx
+	}
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", url.QueryEscape(req.GetName())))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.SayHello[0:len(c.CallOptions.SayHello):len(c.CallOptions.SayHello)], opts...)
 	var resp *echopb.EchoReply
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -164,7 +198,13 @@ func (c *EchoServerClient) SayHello(ctx context.Context, req *echopb.EchoRequest
 }
 
 func (c *EchoServerClient) SayHelloLRO(ctx context.Context, req *echopb.EchoRequest, opts ...gax.CallOption) (*SayHelloLROOperation, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	if _, ok := ctx.Deadline(); !ok && !c.disableDeadlines {
+		cctx, cancel := context.WithTimeout(ctx, 600000 * time.Millisecond)
+		defer cancel()
+		ctx = cctx
+	}
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", url.QueryEscape(req.GetName())))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.SayHelloLRO[0:len(c.CallOptions.SayHelloLRO):len(c.CallOptions.SayHelloLRO)], opts...)
 	var resp *longrunningpb.Operation
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {

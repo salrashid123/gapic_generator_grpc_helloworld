@@ -25,17 +25,17 @@ The code provided here runs a golang gRPC server that implements handling long r
 
 ## Setup
 
-- Install [protoc](https://github.com/protocolbuffers/protobuf/releases), `go 1.11+`
+- Install [protoc](https://github.com/protocolbuffers/protobuf/releases), `go 1.14+`
 
 ```
 $ protoc --version
-libprotoc 3.9.1
+libprotoc 3.14.0
 ```
 
 add the following entry to `/etc/hosts/`
 (the SNI for the certificates included in this repo uses this name)
 ```
-127.0.0.1 grpc.domain.com
+127.0.0.1 server.domain.com
 ```
 
 Clone the repo and acqure prerequsites
@@ -145,7 +145,7 @@ go run src/grpc_server.go  -grpcport :50051
 To verify things are working, run the plain gRPC client:
 
 ```
-go run src/grpc_client.go  -cacert CA_crt.pem -host localhost:50051 -servername grpc.domain.com
+go run src/grpc_client.go  -cacert CA_crt.pem -host localhost:50051 -servername server.domain.com
 ```
 
 You should see output on the  client and server similar to:
@@ -156,7 +156,7 @@ $ go run src/grpc_server.go  -grpcport :50051
 2019/08/23 17:08:25 Got SayHello -->  SayHello grpc msg 
 
 
-$ go run src/grpc_client.go  -cacert CA_crt.pem -host localhost:50051 -servername grpc.domain.com
+$ go run src/grpc_client.go  -cacert CA_crt.pem -host localhost:50051 -servername server.domain.com
 2019/08/23 17:08:25 Usign gRPC
 2019/08/23 17:08:25 SayHello Response: message:"Hello SayHello grpc msg   from hostname srashid1" 
 ```
@@ -185,13 +185,13 @@ if err != nil {
 Run the GAPIC client
 
 ```
-go run src/gapic_client.go  -cacert CA_crt.pem  -servername grpc.domain.com
+go run src/gapic_client.go  -cacert CA_crt.pem  -servername server.domain.com
 ```
 
 You should see an output similar to:
 
 ```bash
-$ go run src/gapic_client.go  -cacert CA_crt.pem  -servername grpc.domain.com
+$ go run src/gapic_client.go  -cacert CA_crt.pem  -servername server.domain.com
 2019/08/23 17:13:31 Usign GAPIC
 2019/08/23 17:13:31 message:"Hello SayHello gapic msg  from hostname srashid1" 
 2019/08/23 17:13:31 Starting operationID 00fdc6c2-c604-11e9-88d6-e86a641d5560
@@ -311,7 +311,7 @@ All the admin client currently does is lists the operations that maybe in flight
 If one is, you may see its Name listed in the map, otherwise, it's an empty map
 
 ```bash
-$ go run src/admin_client.go  -cacert CA_crt.pem -host localhost:50051 -servername grpc.domain.com 
+$ go run src/admin_client.go  -cacert CA_crt.pem -host localhost:50051 -servername server.domain.com 
 2019/08/23 17:27:40 Running Admin Client
 2019/08/23 17:27:40 ListOperations:
 2019/08/23 17:27:40    {[name:"fb00f242-c605-11e9-88d6-e86a641d5560" ]  {} [] 0}
@@ -330,7 +330,9 @@ The flow in this section is
 First start gRPC server and envoy.  In the example below, i'm using the envoy binary directly...you can use docker or extract it from the official container as shown [here](https://github.com/salrashid123/envoy_discovery/issues/3#issuecomment-522073806).
 
 ```bash
-envoy -c grpc-transcoding.yaml
+docker cp `docker create envoyproxy/envoy-dev:latest`:/usr/local/bin/envoy .
+
+./envoy -c grpc-transcoding.yaml
 ```
 
 Invoke the endpoints via curl:
@@ -338,7 +340,7 @@ Invoke the endpoints via curl:
 - `/v1/sayhello/{name}`:
 
 ```bash
-curl -v http://localhost:8080/v1/sayhello/foo
+curl -v  --cacert CA_crt.pem --resolve server.domain.com:8080:127.0.0.1 https://server.domain.com:8080/v1/sayhello/foo
 < HTTP/1.1 200 OK
 < content-type: application/json
 < x-envoy-upstream-service-time: 0
@@ -357,7 +359,7 @@ curl -v http://localhost:8080/v1/sayhello/foo
 - `v1/sayhellolro/{name}`
 
 ```bash
-curl -v http://localhost:8080/v1/sayhellolro/foo
+curl -v  --cacert CA_crt.pem --resolve server.domain.com:8080:127.0.0.1 https://server.domain.com:8080/v1/sayhellolro/foo
 < HTTP/1.1 200 OK
 < content-type: application/json
 < x-envoy-upstream-service-time: 0
