@@ -18,7 +18,6 @@ package echoclient
 
 import (
 	"context"
-	echopb "echo"
 	"fmt"
 	"math"
 	"net/url"
@@ -27,6 +26,7 @@ import (
 	"cloud.google.com/go/longrunning"
 	lroauto "cloud.google.com/go/longrunning/autogen"
 	gax "github.com/googleapis/gax-go/v2"
+	echopb "github.com/salrashid123/gapic_generator_grpc_helloworld/echo"
 	"google.golang.org/api/option"
 	"google.golang.org/api/option/internaloption"
 	gtransport "google.golang.org/api/transport/grpc"
@@ -44,7 +44,7 @@ type EchoServerCallOptions struct {
 	SayHelloLRO []gax.CallOption
 }
 
-func defaultEchoServerClientOptions() []option.ClientOption {
+func defaultEchoServerGRPCClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		internaloption.WithDefaultEndpoint("grpc.domain.com:50051"),
 		internaloption.WithDefaultMTLSEndpoint("grpc.domain.com:50051"),
@@ -85,36 +85,97 @@ func defaultEchoServerCallOptions() *EchoServerCallOptions {
 	}
 }
 
+// internalEchoServerClient is an interface that defines the methods availaible from .
+type internalEchoServerClient interface {
+	Close() error
+	setGoogleClientInfo(...string)
+	Connection() *grpc.ClientConn
+	SayHello(context.Context, *echopb.EchoRequest, ...gax.CallOption) (*echopb.EchoReply, error)
+	SayHelloLRO(context.Context, *echopb.EchoRequest, ...gax.CallOption) (*SayHelloLROOperation, error)
+	SayHelloLROOperation(name string) *SayHelloLROOperation
+}
+
 // EchoServerClient is a client for interacting with .
-//
 // Methods, except Close, may be called concurrently. However, fields must not be modified concurrently with method calls.
 type EchoServerClient struct {
+	// The internal transport-dependent client.
+	internalClient internalEchoServerClient
+
+	// The call options for this service.
+	CallOptions *EchoServerCallOptions
+
+	// LROClient is used internally to handle long-running operations.
+	// It is exposed so that its CallOptions can be modified if required.
+	// Users should not Close this client.
+	LROClient *lroauto.OperationsClient
+
+}
+
+// Wrapper methods routed to the internal client.
+
+// Close closes the connection to the API service. The user should invoke this when
+// the client is no longer required.
+func (c *EchoServerClient) Close() error {
+	return c.internalClient.Close()
+}
+
+// setGoogleClientInfo sets the name and version of the application in
+// the `x-goog-api-client` header passed on each request. Intended for
+// use by Google-written clients.
+func (c *EchoServerClient) setGoogleClientInfo(keyval ...string) {
+	c.internalClient.setGoogleClientInfo(keyval...)
+}
+
+// Connection returns a connection to the API service.
+//
+// Deprecated.
+func (c *EchoServerClient) Connection() *grpc.ClientConn {
+	return c.internalClient.Connection()
+}
+
+func (c *EchoServerClient) SayHello(ctx context.Context, req *echopb.EchoRequest, opts ...gax.CallOption) (*echopb.EchoReply, error) {
+	return c.internalClient.SayHello(ctx, req, opts...)
+}
+
+func (c *EchoServerClient) SayHelloLRO(ctx context.Context, req *echopb.EchoRequest, opts ...gax.CallOption) (*SayHelloLROOperation, error) {
+	return c.internalClient.SayHelloLRO(ctx, req, opts...)
+}
+
+// SayHelloLROOperation returns a new SayHelloLROOperation from a given name.
+// The name must be that of a previously created SayHelloLROOperation, possibly from a different process.
+func (c *EchoServerClient) SayHelloLROOperation(name string) *SayHelloLROOperation {
+	return c.internalClient.SayHelloLROOperation(name)
+}
+
+// echoServerGRPCClient is a client for interacting with  over gRPC transport.
+//
+// Methods, except Close, may be called concurrently. However, fields must not be modified concurrently with method calls.
+type echoServerGRPCClient struct {
 	// Connection pool of gRPC connections to the service.
 	connPool gtransport.ConnPool
 
 	// flag to opt out of default deadlines via GOOGLE_API_GO_EXPERIMENTAL_DISABLE_DEFAULT_DEADLINE
 	disableDeadlines bool
 
+	// Points back to the CallOptions field of the containing EchoServerClient
+	CallOptions **EchoServerCallOptions
+
 	// The gRPC API client.
 	echoServerClient echopb.EchoServerClient
 
-	// LROClient is used internally to handle longrunning operations.
+	// LROClient is used internally to handle long-running operations.
 	// It is exposed so that its CallOptions can be modified if required.
 	// Users should not Close this client.
-	LROClient *lroauto.OperationsClient
-
-	// The call options for this service.
-	CallOptions *EchoServerCallOptions
+	LROClient **lroauto.OperationsClient
 
 	// The x-goog-* metadata to be sent with each request.
 	xGoogMetadata metadata.MD
 }
 
-// NewEchoServerClient creates a new echo server client.
-//
+// NewEchoServerClient creates a new echo server client based on gRPC.
+// The returned client must be Closed when it is done being used to clean up its underlying connections.
 func NewEchoServerClient(ctx context.Context, opts ...option.ClientOption) (*EchoServerClient, error) {
-	clientOpts := defaultEchoServerClientOptions()
-
+	clientOpts := defaultEchoServerGRPCClientOptions()
 	if newEchoServerClientHook != nil {
 		hookOpts, err := newEchoServerClientHook(ctx, clientHookParams{})
 		if err != nil {
@@ -132,16 +193,20 @@ func NewEchoServerClient(ctx context.Context, opts ...option.ClientOption) (*Ech
 	if err != nil {
 		return nil, err
 	}
-	c := &EchoServerClient{
+	client := EchoServerClient{CallOptions: defaultEchoServerCallOptions()}
+
+	c := &echoServerGRPCClient{
 		connPool:    connPool,
 		disableDeadlines: disableDeadlines,
-		CallOptions: defaultEchoServerCallOptions(),
-
 		echoServerClient: echopb.NewEchoServerClient(connPool),
+		CallOptions: &client.CallOptions,
+
 	}
 	c.setGoogleClientInfo()
 
-	c.LROClient, err = lroauto.NewOperationsClient(ctx, gtransport.WithConnPool(connPool))
+	client.internalClient = c
+
+	client.LROClient, err = lroauto.NewOperationsClient(ctx, gtransport.WithConnPool(connPool))
 	if err != nil {
 		// This error "should not happen", since we are just reusing old connection pool
 		// and never actually need to dial.
@@ -151,32 +216,33 @@ func NewEchoServerClient(ctx context.Context, opts ...option.ClientOption) (*Ech
 		// TODO: investigate error conditions.
 		return nil, err
 	}
-	return c, nil
+	c.LROClient = &client.LROClient
+	return &client, nil
 }
 
 // Connection returns a connection to the API service.
 //
 // Deprecated.
-func (c *EchoServerClient) Connection() *grpc.ClientConn {
+func (c *echoServerGRPCClient) Connection() *grpc.ClientConn {
 	return c.connPool.Conn()
-}
-
-// Close closes the connection to the API service. The user should invoke this when
-// the client is no longer required.
-func (c *EchoServerClient) Close() error {
-	return c.connPool.Close()
 }
 
 // setGoogleClientInfo sets the name and version of the application in
 // the `x-goog-api-client` header passed on each request. Intended for
 // use by Google-written clients.
-func (c *EchoServerClient) setGoogleClientInfo(keyval ...string) {
+func (c *echoServerGRPCClient) setGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", versionGo()}, keyval...)
 	kv = append(kv, "gapic", versionClient, "gax", gax.Version, "grpc", grpc.Version)
 	c.xGoogMetadata = metadata.Pairs("x-goog-api-client", gax.XGoogHeader(kv...))
 }
 
-func (c *EchoServerClient) SayHello(ctx context.Context, req *echopb.EchoRequest, opts ...gax.CallOption) (*echopb.EchoReply, error) {
+// Close closes the connection to the API service. The user should invoke this when
+// the client is no longer required.
+func (c *echoServerGRPCClient) Close() error {
+	return c.connPool.Close()
+}
+
+func (c *echoServerGRPCClient) SayHello(ctx context.Context, req *echopb.EchoRequest, opts ...gax.CallOption) (*echopb.EchoReply, error) {
 	if _, ok := ctx.Deadline(); !ok && !c.disableDeadlines {
 		cctx, cancel := context.WithTimeout(ctx, 600000 * time.Millisecond)
 		defer cancel()
@@ -184,7 +250,7 @@ func (c *EchoServerClient) SayHello(ctx context.Context, req *echopb.EchoRequest
 	}
 	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", url.QueryEscape(req.GetName())))
 	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
-	opts = append(c.CallOptions.SayHello[0:len(c.CallOptions.SayHello):len(c.CallOptions.SayHello)], opts...)
+	opts = append((*c.CallOptions).SayHello[0:len((*c.CallOptions).SayHello):len((*c.CallOptions).SayHello)], opts...)
 	var resp *echopb.EchoReply
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
@@ -197,7 +263,7 @@ func (c *EchoServerClient) SayHello(ctx context.Context, req *echopb.EchoRequest
 	return resp, nil
 }
 
-func (c *EchoServerClient) SayHelloLRO(ctx context.Context, req *echopb.EchoRequest, opts ...gax.CallOption) (*SayHelloLROOperation, error) {
+func (c *echoServerGRPCClient) SayHelloLRO(ctx context.Context, req *echopb.EchoRequest, opts ...gax.CallOption) (*SayHelloLROOperation, error) {
 	if _, ok := ctx.Deadline(); !ok && !c.disableDeadlines {
 		cctx, cancel := context.WithTimeout(ctx, 600000 * time.Millisecond)
 		defer cancel()
@@ -205,7 +271,7 @@ func (c *EchoServerClient) SayHelloLRO(ctx context.Context, req *echopb.EchoRequ
 	}
 	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", url.QueryEscape(req.GetName())))
 	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
-	opts = append(c.CallOptions.SayHelloLRO[0:len(c.CallOptions.SayHelloLRO):len(c.CallOptions.SayHelloLRO)], opts...)
+	opts = append((*c.CallOptions).SayHelloLRO[0:len((*c.CallOptions).SayHelloLRO):len((*c.CallOptions).SayHelloLRO)], opts...)
 	var resp *longrunningpb.Operation
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
@@ -216,7 +282,7 @@ func (c *EchoServerClient) SayHelloLRO(ctx context.Context, req *echopb.EchoRequ
 		return nil, err
 	}
 	return &SayHelloLROOperation{
-		lro: longrunning.InternalNewOperation(c.LROClient, resp),
+		lro: longrunning.InternalNewOperation(*c.LROClient, resp),
 	}, nil
 }
 
@@ -227,9 +293,9 @@ type SayHelloLROOperation struct {
 
 // SayHelloLROOperation returns a new SayHelloLROOperation from a given name.
 // The name must be that of a previously created SayHelloLROOperation, possibly from a different process.
-func (c *EchoServerClient) SayHelloLROOperation(name string) *SayHelloLROOperation {
+func (c *echoServerGRPCClient) SayHelloLROOperation(name string) *SayHelloLROOperation {
 	return &SayHelloLROOperation{
-		lro: longrunning.InternalNewOperation(c.LROClient, &longrunningpb.Operation{Name: name}),
+		lro: longrunning.InternalNewOperation(*c.LROClient, &longrunningpb.Operation{Name: name}),
 	}
 }
 

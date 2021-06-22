@@ -24,15 +24,15 @@
 // To close the open connection, use the Close() method.
 //
 // For information about setting deadlines, reusing contexts, and more
-// please visit pkg.go.dev/cloud.google.com/go.
-package echoclient // import "echoclient"
+// please visit https://pkg.go.dev/cloud.google.com/go.
+package echoclient // import "github.com/salrashid123/gapic_generator_grpc_helloworld/echoclient"
 
 import (
 	"context"
 	"os"
 	"runtime"
-	"strings"
 	"strconv"
+	"strings"
 	"unicode"
 
 	"google.golang.org/api/option"

@@ -28,6 +28,9 @@ The code provided here runs a golang gRPC server that implements handling long r
 - Install [protoc](https://github.com/protocolbuffers/protobuf/releases), `go 1.14+`
 
 ```
+$ go version
+go version go1.15.2 linux/amd64
+
 $ protoc --version
 libprotoc 3.14.0
 ```
@@ -46,7 +49,7 @@ cd gapic_generator_grpc_helloworld
 
 export GOPATH=$GOPATH:`pwd`
 
-git clone https://github.com/googleapis/api-common-protos
+git clone https://github.com/googleapis/api-common-protos /tmp/api-common-protos
 
 go get golang.org/x/net/context \
         golang.org/x/oauth2/google \
@@ -106,9 +109,9 @@ For more information on the service config files, see [service_config.proto](htt
 The following directives compiles the proto files, generates the descriptor (used by envoy), then sets up the gapic clients (as `echoclient` package)
 
 ```bash
- protoc -I ./api-common-protos  -I src/echo  --descriptor_set_out=src/echo/echo.proto.pb  --include_imports   --go_out=plugins=grpc:src/echo/ --go_gapic_out src/     --go_gapic_opt="go-gapic-package=echoclient"';echoclient'       --go_gapic_opt="grpc-service-config=echo_grpc_service_config.json" src/echo/echo.proto
+protoc -I /tmp/api-common-protos  -I src/echo  --descriptor_set_out=src/github.com/salrashid123/gapic_generator_grpc_helloworld/echo/echo.proto.pb  --include_imports   --go_out=plugins=grpc:src/ --go_gapic_out src/     --go_gapic_opt="go-gapic-package=github.com/salrashid123/gapic_generator_grpc_helloworld/echoclient"';echoclient'       --go_gapic_opt="grpc-service-config=echo_grpc_service_config.json" src/echo/echo.proto
 ```
-
+ 
 For more information on, see [gapic-generator](https://github.com/googleapis/gapic-generator) options.
 
 

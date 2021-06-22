@@ -1,7 +1,7 @@
 syntax = "proto3";
 package echo;
 
-option go_package = "echo"; 
+option go_package = "github.com/salrashid123/gapic_generator_grpc_helloworld/echo"; 
 
 
 import "google/api/annotations.proto";

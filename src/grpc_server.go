@@ -1,7 +1,6 @@
 package main
 
 import (
-	"echo"
 	"flag"
 	"fmt"
 	"log"
@@ -11,6 +10,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/salrashid123/gapic_generator_grpc_helloworld/echo"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"

@@ -3,12 +3,13 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"echo"
 	"flag"
 	"io/ioutil"
 	"log"
 
-	"echoclient"
+	"github.com/salrashid123/gapic_generator_grpc_helloworld/echo"
+
+	"github.com/salrashid123/gapic_generator_grpc_helloworld/echoclient"
 
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"

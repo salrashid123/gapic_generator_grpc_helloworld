@@ -3,10 +3,11 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"echo"
 	"flag"
 	"io/ioutil"
 	"log"
+
+	"github.com/salrashid123/gapic_generator_grpc_helloworld/echo"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"

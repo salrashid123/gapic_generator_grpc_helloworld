@@ -18,8 +18,9 @@ package echoclient_test
 
 import (
 	"context"
-	echopb "echo"
-	echoclient "echoclient"
+
+	echopb "github.com/salrashid123/gapic_generator_grpc_helloworld/echo"
+	echoclient "github.com/salrashid123/gapic_generator_grpc_helloworld/echoclient"
 )
 
 func ExampleNewEchoServerClient() {
@@ -28,18 +29,19 @@ func ExampleNewEchoServerClient() {
 	if err != nil {
 		// TODO: Handle error.
 	}
+	defer c.Close()
+
 	// TODO: Use client.
 	_ = c
 }
 
 func ExampleEchoServerClient_SayHello() {
-	// import echopb "echo"
-
 	ctx := context.Background()
 	c, err := echoclient.NewEchoServerClient(ctx)
 	if err != nil {
 		// TODO: Handle error.
 	}
+	defer c.Close()
 
 	req := &echopb.EchoRequest{
 		// TODO: Fill request struct fields.
@@ -53,13 +55,12 @@ func ExampleEchoServerClient_SayHello() {
 }
 
 func ExampleEchoServerClient_SayHelloLRO() {
-	// import echopb "echo"
-
 	ctx := context.Background()
 	c, err := echoclient.NewEchoServerClient(ctx)
 	if err != nil {
 		// TODO: Handle error.
 	}
+	defer c.Close()
 
 	req := &echopb.EchoRequest{
 		// TODO: Fill request struct fields.
