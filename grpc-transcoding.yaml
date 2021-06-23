@@ -29,7 +29,7 @@ static_resources:
           - name: envoy.filters.http.grpc_json_transcoder
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder        
-              proto_descriptor: "src/echo/echo.proto.pb"
+              proto_descriptor: "src/github.com/salrashid123/gapic_generator_grpc_helloworld/echo/echo.proto.pb"
               services: ["echo.EchoServer"]
               print_options:
                 add_whitespace: true
