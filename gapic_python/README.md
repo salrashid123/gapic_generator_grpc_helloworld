@@ -5,7 +5,7 @@
 
 ### First some housekeeping (not necessary for the log)
 
-- Requires `python 3.7`
+- Requires `python 3.9` (really 3+)
 
 
 ```bash
@@ -29,8 +29,10 @@ rm -rf env
 
 ### Generate gRPC Server
 ```bash
-virtualenv   --no-site-packages -p python3.7 env
+virtualenv  env
 source env/bin/activate
+$ python --version
+   Python 3.9.2
 pip install grpcio-tools  gapic-generator   protobuf proto-plus google.api.core grpc-google-longrunning-v2
 ```
 
@@ -44,11 +46,10 @@ git clone https://github.com/googleapis/googleapis.git
 
 ```bash
   export PYTHONPATH=`pwd`/destserver:$PYTHONPATH
-  export GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=`pwd`/CA_crt.pem
 
   python -m grpc_tools.protoc  -I googleapis/ --proto_path=. -I=/usr/local/include/google/protobuf/ -I . --python_out=destserver/  --grpc_python_out=destserver/ helloworld.proto
 
-  python -m grpc_tools.protoc  -I googleapis/ --proto_path=. -I=/usr/local/include/google/protobuf/ -I . --python_out=env/lib/python3.7/site-packages   --grpc_python_out=env/lib/python3.7/site-packages ./googleapis/google/longrunning/operations.proto
+  python -m grpc_tools.protoc  -I googleapis/ --proto_path=. -I=/usr/local/include/google/protobuf/ -I . --python_out=env/lib/python3.9/site-packages   --grpc_python_out=env/lib/python3.9/site-packages ./googleapis/google/longrunning/operations.proto
 
   python -m grpc_tools.protoc -I=. -I=/usr/local/include/google/protobuf/  -I=googleapis/  --python_gapic_out=destclient/ --grpc_python_out=destclient/ --include_imports --include_source_info -o helloworld_descriptor.desc helloworld.proto
 ```
@@ -67,10 +68,8 @@ in a *new* window
 ```
 
 cd client/
-virtualenv   --no-site-packages -p python3.7 env
+virtualenv  env
 source env/bin/activate
-export GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=`pwd`/CA_crt.pem
-
 ```
 
 - for GAPIC
