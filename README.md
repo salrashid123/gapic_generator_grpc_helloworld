@@ -47,24 +47,7 @@ Clone the repo and acqure prerequsites
 git clone https://github.com/salrashid123/gapic_generator_grpc_helloworld.git
 cd gapic_generator_grpc_helloworld
 
-export GOPATH=$GOPATH:`pwd`
-
 git clone https://github.com/googleapis/api-common-protos /tmp/api-common-protos
-
-go get golang.org/x/net/context \
-        golang.org/x/oauth2/google \
-        golang.org/x/net/http2 \
-        google.golang.org/grpc \
-        google.golang.org/grpc/credentials \
-        google.golang.org/grpc/health \
-        google.golang.org/grpc/health/grpc_health_v1 \
-        google.golang.org/grpc/metadata \
-        google.golang.org/api/option \
-        google.golang.org/api/transport \
-        github.com/google/uuid \
-        github.com/googleapis/gax-go/v2 \
-        github.com/golang/protobuf/protoc-gen-go \
-        github.com/googleapis/gapic-generator-go/cmd/protoc-gen-go_gapic
 ```
 
 ### Configure service config
@@ -109,7 +92,14 @@ For more information on the service config files, see [service_config.proto](htt
 The following directives compiles the proto files, generates the descriptor (used by envoy), then sets up the gapic clients (as `echoclient` package)
 
 ```bash
-protoc -I /tmp/api-common-protos  -I src/echo  --descriptor_set_out=src/github.com/salrashid123/gapic_generator_grpc_helloworld/echo/echo.proto.pb  --include_imports   --go_out=plugins=grpc:src/ --go_gapic_out src/     --go_gapic_opt="go-gapic-package=github.com/salrashid123/gapic_generator_grpc_helloworld/echoclient"';echoclient'       --go_gapic_opt="grpc-service-config=echo_grpc_service_config.json" src/echo/echo.proto
+protoc -I /tmp/api-common-protos  -I src/echo  \
+  --descriptor_set_out=src/github.com/salrashid123/gapic_generator_grpc_helloworld/echo/echo.proto.pb  \
+  --include_imports   \
+  --go_out=plugins=grpc:src/ \
+  --go_gapic_out src/  \
+  --go_gapic_opt="go-gapic-package=github.com/salrashid123/gapic_generator_grpc_helloworld/echoclient"';echoclient' \
+  --go_gapic_opt="grpc-service-config=echo_grpc_service_config.json" \
+  src/echo/echo.proto
 ```
  
 For more information on, see [gapic-generator](https://github.com/googleapis/gapic-generator) options.
@@ -153,7 +143,7 @@ go run src/grpc_client.go  -cacert CA_crt.pem -host localhost:50051 -servername 
 
 You should see output on the  client and server similar to:
 
-```bash
+```log
 $ go run src/grpc_server.go  -grpcport :50051
 2019/08/23 17:08:17 Starting gRPC sever on port :50051
 2019/08/23 17:08:25 Got SayHello -->  SayHello grpc msg 
@@ -193,7 +183,7 @@ go run src/gapic_client.go  -cacert CA_crt.pem  -servername server.domain.com
 
 You should see an output similar to:
 
-```bash
+```log
 $ go run src/gapic_client.go  -cacert CA_crt.pem  -servername server.domain.com
 2019/08/23 17:13:31 Usign GAPIC
 2019/08/23 17:13:31 message:"Hello SayHello gapic msg  from hostname srashid1" 
@@ -262,7 +252,7 @@ log.Printf("Done: %v", resplro.Done())
 
 On the server side, all that `/SayHelloLRO` initially returns is an `Operations` object back to the GAPIC client.  THe GAPIC client takes the unique id embedded within that object to internally poll the service for the final outcome (you can see the polling as lines
 
-```
+```log
 2019/08/23 17:13:31 GetOperation:  00fdc6c2-c604-11e9-88d6-e86a641d5560
 2019/08/23 17:13:31 GetOperation:  00fdc6c2-c604-11e9-88d6-e86a641d5560
 2019/08/23 17:13:33 GetOperation:  00fdc6c2-c604-11e9-88d6-e86a641d5560
@@ -313,7 +303,7 @@ All the admin client currently does is lists the operations that maybe in flight
 
 If one is, you may see its Name listed in the map, otherwise, it's an empty map
 
-```bash
+```log
 $ go run src/admin_client.go  -cacert CA_crt.pem -host localhost:50051 -servername server.domain.com 
 2019/08/23 17:27:40 Running Admin Client
 2019/08/23 17:27:40 ListOperations:

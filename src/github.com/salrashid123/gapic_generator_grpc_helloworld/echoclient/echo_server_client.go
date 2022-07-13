@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ func defaultEchoServerGRPCClientOptions() []option.ClientOption {
 		internaloption.WithDefaultMTLSEndpoint("grpc.domain.com:50051"),
 		internaloption.WithDefaultAudience("https://grpc.domain.com/"),
 		internaloption.WithDefaultScopes(DefaultAuthScopes()...),
-		option.WithGRPCDialOption(grpc.WithDisableServiceConfig()),
+		internaloption.EnableJwtWithScope(),
 		option.WithGRPCDialOption(grpc.WithDefaultCallOptions(
 		grpc.MaxCallRecvMsgSize(math.MaxInt32))),
 	}
@@ -85,7 +85,7 @@ func defaultEchoServerCallOptions() *EchoServerCallOptions {
 	}
 }
 
-// internalEchoServerClient is an interface that defines the methods availaible from .
+// internalEchoServerClient is an interface that defines the methods available from .
 type internalEchoServerClient interface {
 	Close() error
 	setGoogleClientInfo(...string)
@@ -232,7 +232,7 @@ func (c *echoServerGRPCClient) Connection() *grpc.ClientConn {
 // use by Google-written clients.
 func (c *echoServerGRPCClient) setGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", versionGo()}, keyval...)
-	kv = append(kv, "gapic", versionClient, "gax", gax.Version, "grpc", grpc.Version)
+	kv = append(kv, "gapic", getVersionClient(), "gax", gax.Version, "grpc", grpc.Version)
 	c.xGoogMetadata = metadata.Pairs("x-goog-api-client", gax.XGoogHeader(kv...))
 }
 
@@ -249,6 +249,7 @@ func (c *echoServerGRPCClient) SayHello(ctx context.Context, req *echopb.EchoReq
 		ctx = cctx
 	}
 	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", url.QueryEscape(req.GetName())))
+
 	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append((*c.CallOptions).SayHello[0:len((*c.CallOptions).SayHello):len((*c.CallOptions).SayHello)], opts...)
 	var resp *echopb.EchoReply
@@ -270,6 +271,7 @@ func (c *echoServerGRPCClient) SayHelloLRO(ctx context.Context, req *echopb.Echo
 		ctx = cctx
 	}
 	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", url.QueryEscape(req.GetName())))
+
 	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append((*c.CallOptions).SayHelloLRO[0:len((*c.CallOptions).SayHelloLRO):len((*c.CallOptions).SayHelloLRO)], opts...)
 	var resp *longrunningpb.Operation

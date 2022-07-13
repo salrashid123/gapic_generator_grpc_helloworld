@@ -36,7 +36,9 @@ static_resources:
                 always_print_primitive_fields: true
                 always_print_enums_as_ints: false
                 preserve_proto_field_names: false
-          - name: envoy.filters.http.router        
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
       transport_socket:
         name: envoy.transport_sockets.tls
         typed_config:

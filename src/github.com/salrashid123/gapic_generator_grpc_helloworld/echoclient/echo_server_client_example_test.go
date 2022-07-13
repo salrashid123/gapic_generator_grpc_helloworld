@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ func ExampleEchoServerClient_SayHello() {
 
 	req := &echopb.EchoRequest{
 		// TODO: Fill request struct fields.
+		// See https://pkg.go.dev/github.com/salrashid123/gapic_generator_grpc_helloworld/echo#EchoRequest.
 	}
 	resp, err := c.SayHello(ctx, req)
 	if err != nil {
@@ -64,6 +65,7 @@ func ExampleEchoServerClient_SayHelloLRO() {
 
 	req := &echopb.EchoRequest{
 		// TODO: Fill request struct fields.
+		// See https://pkg.go.dev/github.com/salrashid123/gapic_generator_grpc_helloworld/echo#EchoRequest.
 	}
 	op, err := c.SayHelloLRO(ctx, req)
 	if err != nil {

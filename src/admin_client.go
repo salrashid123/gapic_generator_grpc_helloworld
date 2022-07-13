@@ -64,6 +64,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("did not list operations: %v", err)
 	}
-	log.Printf("   %v", *operationsList)
-
+	for _, o := range operationsList.Operations {
+		log.Printf("   %s", o.Name)
+	}
 }
