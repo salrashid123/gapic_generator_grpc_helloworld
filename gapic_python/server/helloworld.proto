@@ -1,5 +1,5 @@
 syntax = "proto3";
-package helloworld;
+package destserver.helloworld;
 
 import "google/api/annotations.proto";
 import "google/longrunning/operations.proto";

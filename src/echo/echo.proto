@@ -8,6 +8,27 @@ import "google/api/annotations.proto";
 import "google/longrunning/operations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
+import "google/api/config_change.proto";
+import "google/protobuf/timestamp.proto";
+
+message OperationMetadata {
+  message Step {
+    string description = 2;
+    Status status = 4;
+  }
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    DONE = 1;
+    NOT_STARTED = 2;
+    IN_PROGRESS = 3;
+    FAILED = 4;
+    CANCELLED = 5;
+  }
+  repeated string resource_names = 1;
+  repeated Step steps = 2;
+  int32 progress_percentage = 3;
+  google.protobuf.Timestamp start_time = 4;
+}
 
 
 service EchoServer {
@@ -22,10 +43,10 @@ service EchoServer {
     option (google.api.http).get = "/v1/sayhellolro/{name}";
     option (google.longrunning.operation_info) = {
       response_type: "EchoReply"
+      metadata_type: "OperationMetadata"
     };
   }
 }
-
 
 message EchoRequest {
   string name = 1;

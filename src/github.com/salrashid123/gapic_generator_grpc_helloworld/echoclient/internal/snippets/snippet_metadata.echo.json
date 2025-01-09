@@ -1,0 +1,105 @@
+{
+  "clientLibrary": {
+    "name": "github.com/salrashid123/gapic_generator_grpc_helloworld/echoclient",
+    "version": "$VERSION",
+    "language": "GO",
+    "apis": [
+      {
+        "id": "echo",
+        "version": "echo"
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "regionTag": "grpc_echo_generated_EchoServer_SayHello_sync",
+      "title": "grpc SayHello Sample",
+      "file": "EchoServerClient/SayHello/main.go",
+      "language": "GO",
+      "clientMethod": {
+        "shortName": "SayHello",
+        "fullName": "echo.EchoServerClient.SayHello",
+        "parameters": [
+          {
+            "type": "context.Context",
+            "name": "ctx"
+          },
+          {
+            "type": "echopb.EchoRequest",
+            "name": "req"
+          },
+          {
+            "type": "...gax.CallOption",
+            "name": "opts"
+          }
+        ],
+        "resultType": "*echopb.EchoReply",
+        "client": {
+          "shortName": "EchoServerClient",
+          "fullName": "echo.EchoServerClient"
+        },
+        "method": {
+          "shortName": "SayHello",
+          "fullName": "echo.EchoServer.SayHello",
+          "service": {
+            "shortName": "EchoServer",
+            "fullName": "echo.EchoServer"
+          }
+        }
+      },
+      "origin": "API_DEFINITION",
+      "segments": [
+        {
+          "start": 18,
+          "end": 53,
+          "type": "FULL"
+        }
+      ]
+    },
+    {
+      "regionTag": "grpc_echo_generated_EchoServer_SayHelloLRO_sync",
+      "title": "grpc SayHelloLRO Sample",
+      "file": "EchoServerClient/SayHelloLRO/main.go",
+      "language": "GO",
+      "clientMethod": {
+        "shortName": "SayHelloLRO",
+        "fullName": "echo.EchoServerClient.SayHelloLRO",
+        "parameters": [
+          {
+            "type": "context.Context",
+            "name": "ctx"
+          },
+          {
+            "type": "echopb.EchoRequest",
+            "name": "req"
+          },
+          {
+            "type": "...gax.CallOption",
+            "name": "opts"
+          }
+        ],
+        "resultType": "SayHelloLROOperation",
+        "client": {
+          "shortName": "EchoServerClient",
+          "fullName": "echo.EchoServerClient"
+        },
+        "method": {
+          "shortName": "SayHelloLRO",
+          "fullName": "echo.EchoServer.SayHelloLRO",
+          "service": {
+            "shortName": "EchoServer",
+            "fullName": "echo.EchoServer"
+          }
+        }
+      },
+      "origin": "API_DEFINITION",
+      "segments": [
+        {
+          "start": 18,
+          "end": 58,
+          "type": "FULL"
+        }
+      ]
+    }
+  ]
+}

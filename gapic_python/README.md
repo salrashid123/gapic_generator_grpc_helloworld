@@ -32,13 +32,13 @@ rm -rf env
 virtualenv  env
 source env/bin/activate
 $ python --version
-   Python 3.9.2
+   Python 3.11.9
 pip install grpcio-tools  gapic-generator   protobuf proto-plus google.api.core grpc-google-longrunning-v2
 ```
 
 Get protos
 
-```
+```bash
 git clone https://github.com/googleapis/googleapis.git
 ```
 
@@ -49,15 +49,16 @@ git clone https://github.com/googleapis/googleapis.git
 
   python -m grpc_tools.protoc  -I googleapis/ --proto_path=. -I=/usr/local/include/google/protobuf/ -I . --python_out=destserver/  --grpc_python_out=destserver/ helloworld.proto
 
-  python -m grpc_tools.protoc  -I googleapis/ --proto_path=. -I=/usr/local/include/google/protobuf/ -I . --python_out=env/lib/python3.9/site-packages   --grpc_python_out=env/lib/python3.9/site-packages ./googleapis/google/longrunning/operations.proto
+  python -m grpc_tools.protoc  -I googleapis/ --proto_path=. -I=/usr/local/include/google/protobuf/ -I . --python_out=./env/lib/python3.11/site-packages   --grpc_python_out=./env/lib/python3.11/site-packages ./googleapis/google/longrunning/operations.proto
 
   python -m grpc_tools.protoc -I=. -I=/usr/local/include/google/protobuf/  -I=googleapis/  --python_gapic_out=destclient/ --grpc_python_out=destclient/ --include_imports --include_source_info -o helloworld_descriptor.desc helloworld.proto
 ```
-(note,, i'm manually copying the generating `operations.proto` and 'copying them into the python 37 folders)
+
+(note,, i'm manually copying the generating `operations.proto` and 'copying them into the python 311 folders)
 
 ### Start Server
 
-```
+```bash
 python greeter_server.py
 ```
 
@@ -65,8 +66,8 @@ python greeter_server.py
 ###  Setup client
 
 in a *new* window
-```
 
+```bash
 cd client/
 virtualenv  env
 source env/bin/activate
@@ -74,9 +75,8 @@ source env/bin/activate
 
 - for GAPIC
 
-```
+```bash
 pip install ../server/destclient/
-
 ```
 
 - for gRPC
@@ -84,13 +84,13 @@ pip install ../server/destclient/
 
 Point the `PYTHONPATH` to point to where the `helloworld` compiled files sit
 
-```
+```bash
 export PYTHONPATH=$PYTHONPATH:`pwd`/../server/destserver
 ```
 
 
 ### Run client
 
-```
+```bash
 python greeter_client.py
 ```

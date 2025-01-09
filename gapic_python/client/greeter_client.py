@@ -5,12 +5,12 @@ import time
 
 
 def run_gapic_lro():
-    from helloworld import GreeterClient
-    from helloworld import HelloRequest
-    from helloworld import HelloReply
+    from destserver.helloworld import GreeterClient
+    from destserver.helloworld import HelloRequest
+    from destserver.helloworld import HelloReply
     from google.auth.credentials import AnonymousCredentials
     import grpc
-    from helloworld.services.greeter.transports import GreeterGrpcTransport
+    from destserver.helloworld.services.greeter.transports import GreeterGrpcTransport
 
     creds = AnonymousCredentials()
     # normally use creds but since we have custom CA certs..
@@ -47,9 +47,9 @@ def run_gapic_lro():
 
 
 def run_gapic():
-    from helloworld import GreeterClient
-    from helloworld import HelloRequest
-    from helloworld import HelloReply
+    from destserver.helloworld import GreeterClient
+    from destserver.helloworld import HelloRequest
+    from destserver.helloworld import HelloReply
     import grpc
     from helloworld.services.greeter.transports import GreeterGrpcTransport
     from google.auth.credentials import AnonymousCredentials

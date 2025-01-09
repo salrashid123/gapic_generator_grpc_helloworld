@@ -48,6 +48,10 @@ git clone https://github.com/salrashid123/gapic_generator_grpc_helloworld.git
 cd gapic_generator_grpc_helloworld
 
 git clone https://github.com/googleapis/api-common-protos /tmp/api-common-protos
+
+# git clone https://github.com/googleapis/gapic-generator-go.git
+# cd gapic-generator-go
+# go install ./cmd/protoc-gen-go_gapic
 ```
 
 ### Configure service config

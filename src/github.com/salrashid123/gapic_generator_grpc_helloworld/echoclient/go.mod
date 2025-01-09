@@ -1,6 +1,8 @@
 module echoclient
 
-go 1.17
+go 1.21
+
+toolchain go1.22.4
 
 require (
 

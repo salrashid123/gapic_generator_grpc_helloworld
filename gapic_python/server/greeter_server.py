@@ -8,8 +8,8 @@ from concurrent import futures
 import google.longrunning.operations_pb2
 import google.protobuf.any_pb2
 import grpc
-import helloworld_pb2
-import helloworld_pb2_grpc
+import destserver.helloworld_pb2
+import destserver.helloworld_pb2_grpc
 from google.longrunning import operations_pb2
 from google.longrunning.operations_pb2_grpc import OperationsServicer
 from google.protobuf.any_pb2 import Any
@@ -28,7 +28,7 @@ class GreeterLRO(google.longrunning.operations_pb2_grpc.OperationsServicer):
             if (random.randint(1, 101) >= 70):
                 logging.info("Operation complete " + request.name)
                 rr = workRequestMap[request.name]
-                respobj = helloworld_pb2.HelloReply(
+                respobj = destserver.helloworld_pb2.HelloReply(
                     message='HelloLRO ' + rr.name)
                 some_any = google.protobuf.any_pb2.Any()
                 some_any.Pack(respobj)
@@ -40,7 +40,7 @@ class GreeterLRO(google.longrunning.operations_pb2_grpc.OperationsServicer):
         context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
 
 
-class Greeter(helloworld_pb2_grpc.GreeterServicer):
+class Greeter(destserver.helloworld_pb2_grpc.GreeterServicer):
 
     def SayHello(self, request, context):
         logging.info(">>> got gRPC.. ")
@@ -60,7 +60,7 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
 
-    helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
+    destserver.helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
     google.longrunning.operations_pb2_grpc.add_OperationsServicer_to_server(
         GreeterLRO(), server)
 
